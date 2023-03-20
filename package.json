@@ -3,8 +3,7 @@
   "description": "A web application to manage gowdown stock",
   "version": "1.0.0",
   "main": "index.js",
-  "author": "Kushagra Agarwal",
-
+  "devDependencies": {},
   "scripts": {
     "start": "node index.js", 
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -13,7 +12,12 @@
     "type": "git",
     "url": "git+https://github.com/NEWHELL69/StockSheet.git"
   },
+  "author": "Kushagra Agarwal",
   "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NEWHELL69/StockSheet/issues"
+  },
+  "homepage": "https://github.com/NEWHELL69/StockSheet#readme",
   "dependencies": {
     "express": "^4.18.2"
   }

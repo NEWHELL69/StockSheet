@@ -3,9 +3,8 @@
   "description": "A web application to manage gowdown stock",
   "version": "1.0.0",
   "main": "index.js",
-  "devDependencies": {},
   "scripts": {
-    "start": "node index.js", 
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -17,8 +16,8 @@
   "bugs": {
     "url": "https://github.com/NEWHELL69/StockSheet/issues"
   },
-  "homepage": "https://github.com/NEWHELL69/StockSheet#readme",
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "morgan": "^1.10.0"
   }
 }

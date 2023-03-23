@@ -1,0 +1,13 @@
+POST http://localhost:3001/api/reel HTTP/1.1
+content-type: application/json
+
+{
+    "gsm": 140,
+    "size": 24,
+    "shipment": "6412097ce444f65477d71f25",
+    "shade": "natural",
+    "annotations": "",
+    "bf": 20,
+    "sold": true,
+    "soldTo": "Galaxy corupacks"
+}

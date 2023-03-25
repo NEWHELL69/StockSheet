@@ -2,12 +2,33 @@ POST http://localhost:3001/api/reel HTTP/1.1
 content-type: application/json
 
 {
-    "gsm": 140,
-    "size": 24,
+    "gsm": 100,
+    "size": 32,
     "shipment": "6412097ce444f65477d71f25",
-    "shade": "natural",
+    "shade": "virgin",
     "annotations": "",
-    "bf": 20,
-    "sold": true,
-    "soldTo": "Galaxy corupacks"
+    "bf": 18,
+    "sold": false,
+    "soldTo": ""
 }
+
+###
+DELETE http://localhost:3001/api/reel/641f0c8610919fce8573819c HTTP/1.1
+
+###
+PUT http://localhost:3001/api/reel/641c652a8d43a78c3e33192e HTTP/1.1
+content-type: application/json
+
+{
+    "gsm": 70,
+    "size": 22,
+    "shipment": "6412097ce444f65477d71f25",
+    "shade": "color",
+    "annotations": "New",
+    "bf": 22,
+    "sold": true,
+    "soldTo": "anupam traders"
+}
+
+###
+GET http://localhost:3001/api/reel/641c63e40d1f8add8e40ee54 HTTP/1.1

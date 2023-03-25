@@ -1,3 +1,6 @@
+// There is no hot reloading. If you modify the code while the application is running then the changes 
+// will not be reflected
+
 require('dotenv').config()
 
 const express = require("express");
@@ -6,13 +9,12 @@ const mongoose = require('mongoose')
 
 // mongoose models
 const Reel = require('./models/reel')
-console.log(Reel)
 
 
 const app = express();
 
-// If you change the directory, which serves the frontend, below then reloading the running
-// application would respond with 404 error and won't reflect the change until aplication is restarted.
+// ------------------------------------------------------------
+// Middlewares
 app.use(express.static('build'))
 app.use(express.json())
 
@@ -40,13 +42,12 @@ app.use(morgan(function (tokens, req, res) {
   ].join(' ')
 }))
 // ------------------------------------------------------------
+// ------------------------------------------------------------
 
 // ------------------------------------------------------------
 // mongoDB code below
 
 const url = process.env.MONGODB_URI
-
-console.log(typeof url)
 
 console.log("Connecting to MongoDB");
 
@@ -58,6 +59,22 @@ mongoose.connect(url).then((_) => {
 
 // ------------------------------------------------------------
 
+
+// ------------------------------------------------------------
+// API
+
+//Reel API
+
+app.get('/api/reel/:id', (request, response) => {
+
+  let id = request.params.id;
+
+  Reel.findById(id).then((reel) => {
+      response.json(reel)
+  }).catch((e) => {
+      console.log(e)
+  })
+})
 
 app.post('/api/reel', (request, response) => {
 
@@ -83,6 +100,51 @@ app.post('/api/reel', (request, response) => {
 
 })
 
+app.delete('/api/reel/:id', (request, response) => {
+
+  const id = new mongoose.Types.ObjectId(request.params.id)
+
+  Reel.deleteOne(id).then((obj) => {
+      if(obj.acknowledged) {
+          console.log("Deletion successfull")
+      }
+  }).catch((e) => {
+      console.log(e)
+  })
+
+  response.status(204).end()
+})
+
+app.put('/api/reel/:id', (request, response) => {
+
+  const body = request.body;
+
+  // This conversion in not necessary because mongoose do implicit type casting to match 
+  // to the schema.
+  const id = new mongoose.Types.ObjectId(request.params.id)
+
+  const updationToReel = {
+    gsm: body.gsm,
+    size: body.size,
+    shipment: body.shipment,
+    shade: body.shade,
+    annotations: body.annotations,
+    bf: body.bf,
+    sold: body.sold,
+    soldTo: body.soldTo,
+  }
+
+  Reel.updateOne({_id: id}, updationToReel).then((res) => {
+    if(res.acknowledged){
+      response.status(204).end()
+    }
+  }).catch((e) => {
+    console.log(e)
+  })
+
+})
+
+// ------------------------------------------------------------
 
 const port = process.env.PORT || 3001;
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));

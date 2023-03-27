@@ -2,12 +2,12 @@ POST http://localhost:3001/api/reel HTTP/1.1
 content-type: application/json
 
 {
-    "gsm": 100,
-    "size": 32,
+    "gsm": 80,
+    "size": 46,
     "shipment": "6412097ce444f65477d71f25",
-    "shade": "virgin",
-    "annotations": "",
-    "bf": 18,
+    "shade": "virgin kraft",
+    "annotations": "tear in sheet",
+    "bf": 12,
     "sold": false,
     "soldTo": ""
 }
@@ -32,3 +32,19 @@ content-type: application/json
 
 ###
 GET http://localhost:3001/api/reel/641c63e40d1f8add8e40ee54 HTTP/1.1
+
+###
+PUT http://localhost:3001/api/reel/6421d5ba5486ad1885412d07 HTTP/1.1
+content-type: application/json
+
+{
+    "gsm": 80,
+    "size": 46,
+    "shipment": "6412097ce444f65477d71f25",
+    "shade": "virgin kraft",
+    "annotations": "tear in sheet",
+    "bf": 12,
+    "sold": true,
+    "soldTo": "Amit packaging",
+    "soldDate": "2023-03-27T17:43:22.179+00:00"
+}

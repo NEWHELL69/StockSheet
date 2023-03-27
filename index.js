@@ -92,6 +92,7 @@ app.post('/api/reel', (request, response) => {
     bf: body.bf,
     sold: body.sold,
     soldTo: body.soldTo,
+    soldDate: body.soldDate
   })
 
   reel.save().then((newReel) => {
@@ -135,6 +136,7 @@ app.put('/api/reel/:id', (request, response) => {
     bf: body.bf,
     sold: body.sold,
     soldTo: body.soldTo,
+    soldDate: body.soldDate
   }
 
   Reel.updateOne({_id: id}, updationToReel).then((res) => {

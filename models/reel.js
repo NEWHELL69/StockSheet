@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 // Reel id is created by mongoose when we save a document
-const reelSchema = new mongoose.Schema({
+const ReelSchema = new mongoose.Schema({
     gsm: Number,
     size: Number,
     date: { type: Date, default: Date.now },
@@ -11,9 +11,10 @@ const reelSchema = new mongoose.Schema({
     bf: Number,
     sold: Boolean,
     soldTo: String,
+    soldDate: { type: Date, default: null }
 })
 
-reelSchema.set('toJSON', {
+ReelSchema.set('toJSON', {
     transform: (document, returnedObject, options) => {
         returnedObject.id = returnedObject._id.toString()
         delete returnedObject._id
@@ -21,4 +22,6 @@ reelSchema.set('toJSON', {
     }
 })
 
-module.exports = mongoose.model('Reel', reelSchema)
+// The first argument to the function below dictates the collection to put new documents in.
+// This is fragile
+module.exports = mongoose.model('Reel', ReelSchema)

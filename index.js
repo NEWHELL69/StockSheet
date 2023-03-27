@@ -53,7 +53,7 @@ app.use(morgan(function (tokens, req, res) {
 const url = process.env.MONGODB_URI
 
 console.log("Connecting to MongoDB");
- 
+
 mongoose.connect(url).then((_) => {
     console.log("Connection successfull")
 }).catch((e) => {

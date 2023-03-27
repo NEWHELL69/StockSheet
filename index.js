@@ -15,12 +15,16 @@ const app = express();
 
 // ------------------------------------------------------------
 // Middlewares
+
+// The middleware below serves the frontend to the client. Basically it serves the index.js file in the 
+// build folder and executes it
 app.use(express.static('build'))
+
+// This middleware converts the data recieved to the server in json format
 app.use(express.json())
 
-// ------------------------------------------------------------
-// The code below logs any request made to the server
-
+// This one logs any request made to the server
+// One important thing to note. it only logs those request which have a response.
 app.use(morgan(function (tokens, req, res) {
   if(tokens.method(req, res) === "POST") {
       return [
@@ -41,7 +45,6 @@ app.use(morgan(function (tokens, req, res) {
     tokens['response-time'](req, res), 'ms'
   ].join(' ')
 }))
-// ------------------------------------------------------------
 // ------------------------------------------------------------
 
 // ------------------------------------------------------------

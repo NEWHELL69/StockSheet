@@ -2,7 +2,7 @@
 // will not be reflected
 
 require('dotenv').config()
-// 
+
 const express = require("express");
 const morgan = require('morgan')
 const mongoose = require('mongoose')
@@ -72,11 +72,18 @@ app.get('/api/reel/:id', (request, response) => {
 
   let id = request.params.id;
 
-  Reel.findById(id).then((reel) => {
-      response.json(reel)
-  }).catch((e) => {
+  Reel.findById(id)
+    .then(reel => {
+      if(reel) {
+        response.json(reel)
+      } else {
+        response.status(404).end();
+      }
+    }).catch((e) => {
       console.log(e)
-  })
+      response.status(400).end()
+    })
+
 })
 
 app.post('/api/reel', (request, response) => {
@@ -95,12 +102,18 @@ app.post('/api/reel', (request, response) => {
     soldDate: body.soldDate
   })
 
-  reel.save().then((newReel) => {
+  reel.save()
+    .then((newReel) => {
+      // Unlike findById method which can resolve with null value, save method only resolves, with the saved document, 
+      // when the document is actually saved in database
       if(newReel === reel){
           console.log(`Added new reel`, newReel);
           response.json(newReel)
-      }    
-  })
+      }
+    }).catch((e) => {
+      console.log(e)
+      response.status(400).end()
+    })
 
 })
 
@@ -108,15 +121,19 @@ app.delete('/api/reel/:id', (request, response) => {
 
   const id = new mongoose.Types.ObjectId(request.params.id)
 
-  Reel.deleteOne(id).then((obj) => {
-      if(obj.acknowledged) {
+  Reel.deleteOne(id).then((res) => {
+      if(res.deletedCount === 1) {
           console.log("Deletion successfull")
+      } else if(res.deletedCount === 0) {
+        console.log("Document to be deleted was not in the database")
       }
+
+      response.status(204).end()
   }).catch((e) => {
       console.log(e)
+      response.status(400).end()
   })
 
-  response.status(204).end()
 })
 
 app.put('/api/reel/:id', (request, response) => {
@@ -140,11 +157,16 @@ app.put('/api/reel/:id', (request, response) => {
   }
 
   Reel.updateOne({_id: id}, updationToReel).then((res) => {
-    if(res.acknowledged){
-      response.status(204).end()
+    if(res.modifiedCount === 1 && res.matchedCount ===1){
+      console.log("Document was found and updated")
+    } else {
+      console.log("Something's went wrong. check it!")
     }
+
+    response.status(204).end()
   }).catch((e) => {
     console.log(e)
+    response.status(400).end()
   })
 
 })

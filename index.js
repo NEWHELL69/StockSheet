@@ -68,7 +68,7 @@ mongoose.connect(url).then((_) => {
 
 //Reel API
 
-app.get('/api/reel/:id', (request, response) => {
+app.get('/api/reel/:id', (request, response, next) => {
 
   let id = request.params.id;
 
@@ -80,13 +80,12 @@ app.get('/api/reel/:id', (request, response) => {
         response.status(404).end();
       }
     }).catch((e) => {
-      console.log(e)
-      response.status(400).end()
+      next(e)
     })
 
 })
 
-app.post('/api/reel', (request, response) => {
+app.post('/api/reel', (request, response, next) => {
 
   const body = request.body
 
@@ -111,13 +110,12 @@ app.post('/api/reel', (request, response) => {
           response.json(newReel)
       }
     }).catch((e) => {
-      console.log(e)
-      response.status(400).end()
+      next(e)
     })
 
 })
 
-app.delete('/api/reel/:id', (request, response) => {
+app.delete('/api/reel/:id', (request, response, next) => {
 
   const id = new mongoose.Types.ObjectId(request.params.id)
 
@@ -130,13 +128,12 @@ app.delete('/api/reel/:id', (request, response) => {
 
       response.status(204).end()
   }).catch((e) => {
-      console.log(e)
-      response.status(400).end()
+      next(e)
   })
 
 })
 
-app.put('/api/reel/:id', (request, response) => {
+app.put('/api/reel/:id', (request, response, next) => {
 
   const body = request.body;
 
@@ -165,11 +162,28 @@ app.put('/api/reel/:id', (request, response) => {
 
     response.status(204).end()
   }).catch((e) => {
-    console.log(e)
-    response.status(400).end()
+    next(e)
   })
 
 })
+
+// ------------------------------------------------------------
+
+// ------------------------------------------------------------
+// Error handling for reel api
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  } 
+
+  next(error)
+}
+
+// this has to be the last loaded middleware.
+app.use(errorHandler)
 
 // ------------------------------------------------------------
 

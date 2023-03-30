@@ -25,6 +25,7 @@ app.use(express.json())
 
 // This one logs any request made to the server
 // One important thing to note. it only logs those request which have a response.
+// No response indicates server error.
 app.use(morgan(function (tokens, req, res) {
   if(tokens.method(req, res) === "POST") {
       return [
@@ -45,6 +46,20 @@ app.use(morgan(function (tokens, req, res) {
     tokens['response-time'](req, res), 'ms'
   ].join(' ')
 }))
+
+// This middleware responds every request with 503 server error code if connection to database is not established
+const handleDataBaseConnection = (request, response, next) => {
+  if(mongoose.connection.readyState !== 1) {
+    response.status(503).json({
+        error: "Database not connected"
+    })
+  } else {
+    // It's important next() is called inside this else block. Because we need to end the request-response cycle.
+    next()
+  }
+}
+
+app.use(handleDataBaseConnection)
 // ------------------------------------------------------------
 
 // ------------------------------------------------------------

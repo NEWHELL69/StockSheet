@@ -100,6 +100,35 @@ app.get('/api/reel/:id', (request, response, next) => {
 
 })
 
+app.get('/api/reels', async (request, response) => {
+  const ids = request.query.ids;
+  const idArray = ids.split(",");
+  const reels = []
+
+  for(id of idArray) {
+    try {
+      const reel = await Reel.findById(id)
+
+      if(reel) {
+        reels.push(reel)
+      } else {
+        reels.push({
+          error: "Reel was not in database."
+        });
+      }
+    } catch(error) {
+        console.log(error.message);
+
+        reels.push({
+          error: error.message
+        })
+      }
+  }
+
+  console.log(reels)
+  response.json(reels)
+})
+
 app.post('/api/reel', (request, response, next) => {
 
   const body = request.body

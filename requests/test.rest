@@ -47,3 +47,6 @@ content-type: application/json
     "sold": false,
     "soldTo": "",
 }
+
+###
+GET http://localhost:3001/api/reels?ids=641ccc8'/a8d43a78c3e33192e,6421d5ba5486ad1885412d07 HTTP/1.1

@@ -105,27 +105,43 @@ app.get('/api/reels', async (request, response) => {
   const idArray = ids.split(",");
   const reels = []
 
+  // In context of get request, the state codes have following meaning:
+  // 1 -> Reel was found (intended behaviour)
+  // 2 -> Reel was not found in database (inteded behaviour)
+  // 0 -> server error
+
   for(id of idArray) {
     try {
       const reel = await Reel.findById(id)
 
       if(reel) {
-        reels.push(reel)
+        // JSON.stringify calls the toJSON method defined on the document and does some other imp stuff.
+        const jsonString = JSON.stringify(reel)
+        const obj = JSON.parse(jsonString)
+
+        reels.push({
+          state: 1,
+          message: "Reel was found",
+          ...obj
+        })
       } else {
         reels.push({
-          error: "Reel was not in database."
+          id: id,
+          state: 2,
+          message: "Reel was not found in database."
         });
       }
     } catch(error) {
-        console.log(error.message);
+        console.log(error);
 
         reels.push({
+          id: id,
+          state: 0,
           error: error.message
         })
       }
   }
 
-  console.log(reels)
   response.json(reels)
 })
 
@@ -175,6 +191,53 @@ app.delete('/api/reel/:id', (request, response, next) => {
       next(e)
   })
 
+})
+
+app.delete('/api/reels', async (request, response, next) => {
+
+  const ids = request.query.ids;
+  const idArray = ids.split(",");
+  const acknowledgments = []
+
+  // In context of delete request for reel, the state codes have following meaning:
+  // 1 -> Reel deletion successfull (intended behaviour)
+  // 2 -> Reel was not found in database (inteded behaviour)
+  // 0 -> server error
+
+  for(id of idArray) {
+    try {
+      const res = await Reel.deleteOne(id)
+
+      if(res.deletedCount === 1) {
+        console.log("Deletion successfull")
+
+        acknowledgments.push({
+          id: id,
+          state: "1",
+          message: "Deletion successfull"
+        })
+
+      } else if(res.deletedCount === 0){
+
+        acknowledgments.push({
+          id: id,
+          state: "2",
+          error: "Reel was not in database."
+        });
+
+      }
+    } catch(error) {
+        console.log(error);
+
+        acknowledgments.push({
+          id: id,
+          state: "0",
+          message: error.message
+        })
+      }
+  }
+
+  response.json(acknowledgments)
 })
 
 app.put('/api/reel/:id', (request, response, next) => {

@@ -320,20 +320,7 @@ app.delete('/api/reels', async (request, response) => {
 app.put('/api/reel/:id', (request, response) => {
 
   const body = request.body;
-
-  // This conversion in not necessary because mongoose do implicit type casting to match 
-  // to the schema.
-  const ogId = request.params.id
-
-  try {
-
-    const id = new mongoose.Types.ObjectId(request.params.id)
-
-  } catch(error) {
-
-    response.status(400).send(responseObj(ogId, 0, error.message, null))
-
-  }
+  const id = request.params.id
 
   const updationToReel = {
     gsm: body.gsm,
@@ -347,13 +334,13 @@ app.put('/api/reel/:id', (request, response) => {
     soldDate: body.soldDate
   }
 
-  Reel.findByIdAndUpdate({_id: id}, updationToReel, {new: true}).then((newReel) => {
+  Reel.findByIdAndUpdate(id, updationToReel, {new: true}).then((newReel) => {
 
     response.json(responseObj(newReel.id, 1, "Document was found and updated", newReel))
 
   }).catch((e) => {
 
-    response.status(400).send(responseObj(ogId, 0, e.message, null))
+    response.status(400).send(responseObj(id, 0, e.message, null))
 
   })
 

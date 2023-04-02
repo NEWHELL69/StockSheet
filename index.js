@@ -83,21 +83,61 @@ mongoose.connect(url).then((_) => {
 
 //Reel API
 
-app.get('/api/reel/:id', (request, response, next) => {
+const responseObj = (id, code, message, reel) => {
+  console.log(message)
 
+  if(reel) {
+    // JSON.stringify calls the toJSON method defined on the document and does some other imp stuff.
+    reel = JSON.stringify(reel)
+    reel = JSON.parse(reel)
+
+    return {
+      id: id,
+      state: {
+        code: code,
+        message: message,
+      },
+      reel: {
+        ...reel
+      }
+    }
+  }else {
+    return {
+      id: id,
+      state: {
+        code: code,
+        message: message,
+      },
+      reel: null
+    }
+  }
+}
+
+app.get('/api/reel/:id', (request, response) => {
   let id = request.params.id;
+
+  // In context of get request, the state codes have following meaning:
+  // 1 -> Reel was found (intended behaviour)
+  // 2 -> Reel was not found in database (inteded behaviour)
+  // 0 -> server error
+
 
   Reel.findById(id)
     .then(reel => {
       if(reel) {
-        response.json(reel)
+
+        response.json(responseObj(id, 1, "Reel was found", reel))
+
       } else {
-        response.status(404).end();
+
+        response.status(404).send(responseObj(id, 2, "Reel was not found", null));
+
       }
     }).catch((e) => {
-      next(e)
-    })
+      console.log(e)
 
+      response.status(400).send(responseObj(id, 0, e.message, null))
+    })
 })
 
 app.get('/api/reels', async (request, response) => {
@@ -110,42 +150,32 @@ app.get('/api/reels', async (request, response) => {
   // 2 -> Reel was not found in database (inteded behaviour)
   // 0 -> server error
 
+  let id = "";
+
   for(id of idArray) {
     try {
       const reel = await Reel.findById(id)
 
       if(reel) {
-        // JSON.stringify calls the toJSON method defined on the document and does some other imp stuff.
-        const jsonString = JSON.stringify(reel)
-        const obj = JSON.parse(jsonString)
 
-        reels.push({
-          state: 1,
-          message: "Reel was found",
-          ...obj
-        })
+        reels.push(responseObj(id, 1, "Reel was found", reel))
+
       } else {
-        reels.push({
-          id: id,
-          state: 2,
-          message: "Reel was not found in database."
-        });
-      }
-    } catch(error) {
-        console.log(error);
 
-        reels.push({
-          id: id,
-          state: 0,
-          error: error.message
-        })
+        reels.push(responseObj(id, 2, "Reel was not found", null));
+        
       }
+    } catch(e) {
+      console.log(e)
+
+      reels.push(responseObj(id, 0, e.message, null))
+    }
   }
 
   response.json(reels)
 })
 
-app.post('/api/reel', (request, response, next) => {
+app.post('/api/reel', (request, response) => {
 
   const body = request.body
 
@@ -163,37 +193,94 @@ app.post('/api/reel', (request, response, next) => {
 
   reel.save()
     .then((newReel) => {
-      // Unlike findById method which can resolve with null value, save method only resolves, with the saved document, 
+      // Unlike findById method which can resolve with null value, save method only resolves with the saved document, 
       // when the document is actually saved in database
       if(newReel === reel){
-          console.log(`Added new reel`, newReel);
-          response.json(newReel)
+
+        response.json(responseObj(newReel.id, 1, "Reel is saved in database", newReel))
+
+      } else {
+
+        response.json(responseObj(null, 2, "Reel was not saved in database", null))
+
       }
     }).catch((e) => {
-      next(e)
-    })
+      console.log(e)
 
+      response.status(400).json(responseObj(null, 0, e.message, null))
+    })
 })
 
-app.delete('/api/reel/:id', (request, response, next) => {
+app.post('/api/reels', async (request, response) => {
+  const reels = request.body;
+  const acknowledgments = []
 
+  // In context of post request, the state codes have following meaning:
+  // 1 -> Reel was saved (intended behaviour)
+  // 2 -> Reel was not saved (inteded behaviour)
+  // 0 -> server error
+
+  let reel = {}
+
+  for(reel of reels) {
+
+    try {
+      reel = new Reel({
+        gsm: reel.gsm,
+        size: reel.size,
+        shipment: reel.shipment,
+        shade: reel.shade,
+        annotations: reel.annotations,
+        bf: reel.bf,
+        sold: reel.sold,
+        soldTo: reel.soldTo,
+        soldDate: reel.soldDate
+      })
+
+      const newReel = await reel.save(reel)
+
+      if(newReel === reel) {
+
+        acknowledgments.push(responseObj(newReel.id, 1, "Reel was saved", reel))
+
+      } else {
+
+        acknowledgments.push(responseObj(null, 2, "Reel was not saved in database", null));
+        
+      }
+    } catch(e) {
+      console.log(e)
+
+      acknowledgments.push(responseObj(null, 0, e.message, null))
+    }
+  }
+
+  response.json(acknowledgments)
+})
+
+app.delete('/api/reel/:id', (request, response) => {
+
+  // This conversion here is necessary
   const id = new mongoose.Types.ObjectId(request.params.id)
 
   Reel.deleteOne(id).then((res) => {
       if(res.deletedCount === 1) {
-          console.log("Deletion successfull")
+
+          response.json(responseObj(id, 1, "Reel was deleted from database", null))
+
       } else if(res.deletedCount === 0) {
-        console.log("Document to be deleted was not in the database")
+
+        response.json(responseObj(id, 2, "Reel was not found and hence not deleted", null))
+
       }
-
-      response.status(204).end()
   }).catch((e) => {
-      next(e)
-  })
 
+    response.json(responseObj(id, 0, e.message, null))
+
+  })
 })
 
-app.delete('/api/reels', async (request, response, next) => {
+app.delete('/api/reels', async (request, response) => {
 
   const ids = request.query.ids;
   const idArray = ids.split(",");
@@ -206,47 +293,47 @@ app.delete('/api/reels', async (request, response, next) => {
 
   for(id of idArray) {
     try {
+      // This conversion here is necessary
+      id = new mongoose.Types.ObjectId(id)
+
       const res = await Reel.deleteOne(id)
 
       if(res.deletedCount === 1) {
-        console.log("Deletion successfull")
 
-        acknowledgments.push({
-          id: id,
-          state: "1",
-          message: "Deletion successfull"
-        })
+        acknowledgments.push(responseObj(id, 1, "Reel was deleted", null))
 
       } else if(res.deletedCount === 0){
 
-        acknowledgments.push({
-          id: id,
-          state: "2",
-          error: "Reel was not in database."
-        });
+        acknowledgments.push(responseObj(id, 2, "Reel was not found and hence not deleted", null));
 
       }
     } catch(error) {
         console.log(error);
 
-        acknowledgments.push({
-          id: id,
-          state: "0",
-          message: error.message
-        })
+        acknowledgments.push(responseObj(id, 0, error.message, null))
       }
   }
 
   response.json(acknowledgments)
 })
 
-app.put('/api/reel/:id', (request, response, next) => {
+app.put('/api/reel/:id', (request, response) => {
 
   const body = request.body;
 
   // This conversion in not necessary because mongoose do implicit type casting to match 
   // to the schema.
-  const id = new mongoose.Types.ObjectId(request.params.id)
+  const ogId = request.params.id
+
+  try {
+
+    const id = new mongoose.Types.ObjectId(request.params.id)
+
+  } catch(error) {
+
+    response.status(400).send(responseObj(ogId, 0, error.message, null))
+
+  }
 
   const updationToReel = {
     gsm: body.gsm,
@@ -260,16 +347,14 @@ app.put('/api/reel/:id', (request, response, next) => {
     soldDate: body.soldDate
   }
 
-  Reel.updateOne({_id: id}, updationToReel).then((res) => {
-    if(res.modifiedCount === 1 && res.matchedCount ===1){
-      console.log("Document was found and updated")
-    } else {
-      console.log("Something's went wrong. check it!")
-    }
+  Reel.findByIdAndUpdate({_id: id}, updationToReel, {new: true}).then((newReel) => {
 
-    response.status(204).end()
+    response.json(responseObj(newReel.id, 1, "Document was found and updated", newReel))
+
   }).catch((e) => {
-    next(e)
+
+    response.status(400).send(responseObj(ogId, 0, e.message, null))
+
   })
 
 })

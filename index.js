@@ -86,7 +86,7 @@ mongoose.connect(url).then(() => {
 // Reel API
 
 const responseObj = (id, code, message, reel) => {
-  console.log(message);
+  // console.log(message);
 
   if (reel) {
     // JSON.stringify calls the toJSON method defined on the document and does some other imp stuff.
@@ -136,35 +136,32 @@ app.get('/api/reel/:id', (request, response) => {
     });
 });
 
-app.get('/api/reels', async (request, response) => {
+app.get('/api/reels', async (request, response, next) => {
   const { ids } = request.query;
   const idArray = ids.split(',');
-  const reels = [];
 
   // In context of get request, the state codes have following meaning:
   // 1 -> Reel was found (intended behaviour)
   // 2 -> Reel was not found in database (inteded behaviour)
   // 0 -> server error
 
-  let id = '';
+  try {
+    const acknowledgments = idArray.map((id) => new Promise((resolve, reject) => {
+      Reel.findById(id).then((reel) => {
+        if (reel) {
+          resolve(responseObj(id, 1, 'Reel was found', reel));
+        } else {
+          resolve(responseObj(id, 2, 'Reel was not found', null));
+        }
+      }).catch((error) => {
+        resolve(responseObj(id, 0, error.message, null));
+      });
+    }));
 
-  for (id of idArray) {
-    try {
-      const reel = await Reel.findById(id);
-
-      if (reel) {
-        reels.push(responseObj(id, 1, 'Reel was found', reel));
-      } else {
-        reels.push(responseObj(id, 2, 'Reel was not found', null));
-      }
-    } catch (e) {
-      console.log(e);
-
-      reels.push(responseObj(id, 0, e.message, null));
-    }
+    response.json(await Promise.all(acknowledgments));
+  } catch (error) {
+    next(error);
   }
-
-  response.json(reels);
 });
 
 app.post('/api/reel', (request, response) => {
@@ -192,53 +189,54 @@ app.post('/api/reel', (request, response) => {
       } else {
         response.json(responseObj(null, 2, 'Reel was not saved in database', null));
       }
-    }).catch((e) => {
-      console.log(e);
+    }).catch((error) => {
+      console.log(error);
 
-      response.status(400).json(responseObj(null, 0, e.message, null));
+      response.status(400).json(responseObj(null, 0, error.message, null));
     });
 });
 
-app.post('/api/reels', async (request, response) => {
+app.post('/api/reels', async (request, response, next) => {
   const reels = request.body;
-  const acknowledgments = [];
 
   // In context of post request, the state codes have following meaning:
   // 1 -> Reel was saved (intended behaviour)
   // 2 -> Reel was not saved (inteded behaviour)
   // 0 -> server error
 
-  let reel = {};
+  try {
+    const acknowledgments = reels.map((reel) => new Promise((resolve, reject) => {
+      try {
+        const reelToSave = new Reel({
+          gsm: reel.gsm,
+          size: reel.size,
+          shipment: reel.shipment,
+          shade: reel.shade,
+          annotations: reel.annotations,
+          bf: reel.bf,
+          sold: reel.sold,
+          soldTo: reel.soldTo,
+          soldDate: reel.soldDate,
+        });
 
-  for (reel of reels) {
-    try {
-      reel = new Reel({
-        gsm: reel.gsm,
-        size: reel.size,
-        shipment: reel.shipment,
-        shade: reel.shade,
-        annotations: reel.annotations,
-        bf: reel.bf,
-        sold: reel.sold,
-        soldTo: reel.soldTo,
-        soldDate: reel.soldDate,
-      });
-
-      const newReel = await reel.save(reel);
-
-      if (newReel === reel) {
-        acknowledgments.push(responseObj(newReel.id, 1, 'Reel was saved', reel));
-      } else {
-        acknowledgments.push(responseObj(null, 2, 'Reel was not saved in database', null));
+        reelToSave.save().then((savedReel) => {
+          if (reelToSave === savedReel) {
+            resolve(responseObj(savedReel.id, 1, 'Reel was saved', savedReel));
+          } else {
+            resolve(responseObj(null, 2, 'Reel was not saved in database', null));
+          }
+        }).catch((error) => {
+          resolve(responseObj(null, 0, error.message, null));
+        });
+      } catch (error) {
+        resolve(responseObj(null, 0, error.message, null));
       }
-    } catch (e) {
-      console.log(e);
+    }));
 
-      acknowledgments.push(responseObj(null, 0, e.message, null));
-    }
+    response.json(await Promise.all(acknowledgments));
+  } catch (error) {
+    next(error);
   }
-
-  response.json(acknowledgments);
 });
 
 app.delete('/api/reel/:id', (request, response) => {
@@ -256,36 +254,38 @@ app.delete('/api/reel/:id', (request, response) => {
   });
 });
 
-app.delete('/api/reels', async (request, response) => {
+app.delete('/api/reels', async (request, response, next) => {
   const { ids } = request.query;
   const idArray = ids.split(',');
-  const acknowledgments = [];
 
   // In context of delete request for reel, the state codes have following meaning:
   // 1 -> Reel deletion successfull (intended behaviour)
   // 2 -> Reel was not found in database (inteded behaviour)
   // 0 -> server error
 
-  for (id of idArray) {
-    try {
-      // This conversion here is necessary
-      id = new mongoose.Types.ObjectId(id);
+  try {
+    const acknowledgments = idArray.map((id) => new Promise((resolve, reject) => {
+      try {
+        // This conversion here is necessary
+        const objId = new mongoose.Types.ObjectId(id);
 
-      const res = await Reel.deleteOne(id);
-
-      if (res.deletedCount === 1) {
-        acknowledgments.push(responseObj(id, 1, 'Reel was deleted', null));
-      } else if (res.deletedCount === 0) {
-        acknowledgments.push(responseObj(id, 2, 'Reel was not found and hence not deleted', null));
+        Reel.deleteOne(objId).then((res) => {
+          if (res.deletedCount === 1) {
+            resolve(responseObj(id, 1, 'Reel was deleted', null));
+          } else {
+            resolve(responseObj(id, 2, 'Reel was not found and hence not deleted', null));
+          }
+        }).catch((error) => {
+          resolve(responseObj(id, 0, error.message, null));
+        });
+      } catch (error) {
+        resolve(responseObj(id, 0, error.message, null));
       }
-    } catch (error) {
-      console.log(error);
-
-      acknowledgments.push(responseObj(id, 0, error.message, null));
-    }
+    }));
+    response.json(await Promise.all(acknowledgments));
+  } catch (error) {
+    next(error);
   }
-
-  response.json(acknowledgments);
 });
 
 app.put('/api/reel/:id', (request, response) => {

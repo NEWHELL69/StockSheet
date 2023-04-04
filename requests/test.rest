@@ -14,7 +14,7 @@ GET http://localhost:3001/api/reel/641c652a8d3a78c3e33192e HTTP/1.1
 
 ###
 # This should work
-GET http://localhost:3001/api/reels?ids=641c652a8d43a78c3e33192e,6421d5ba5486ad1885412d07 HTTP/1.1
+GET http://localhost:3001/api/reels?ids=642c853fcaab852e3380f1a3,642c853fcaab852e3380f1a2 HTTP/1.1
 
 ###
 # This should not work
@@ -130,7 +130,7 @@ DELETE http://localhost:3001/api/reel/eeda898561ddadde23b HTTP/1.1
 
 ###
 #This should work
-DELETE http://localhost:3001/api/reels?ids=64299ed3a898561ddadde238,64299ebda898561ddadde235 HTTP/1.1
+DELETE http://localhost:3001/api/reels?ids=642c942a6e2607618eb15f2d,642c942a6e2607618eb15f2c HTTP/1.1
 
 ###
 #This should not work

@@ -145,7 +145,7 @@ DELETE http://localhost:3001/api/reels?ids=642c91ceb497b0ab40870eae HTTP/1.1
 
 ###
 #This should work
-PUT http://localhost:3001/api/reel/64e72a898561ddadde232 HTTP/1.1
+PUT http://localhost:3001/api/reel/641c652a8d43a78c3e33192e HTTP/1.1
 content-type: application/json
 
 {

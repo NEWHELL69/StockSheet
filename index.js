@@ -2,7 +2,7 @@
 // If you modify the code while the application is running then the changes
 // will not be reflected
 
-// There is one big problem in this code. 
+// There is one big problem in this code.
 // The code uses HTTP status code and also status codes created by me.
 // This is not consistent. I don't know which to use. Building the frontend will answer this issue.
 
@@ -12,8 +12,18 @@ const express = require('express');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
 
-// mongoose models
-const Reel = require('./models/reel');
+// ---------------------------------------------------------
+// mongoose
+// Reel schema
+const reelSchema = require('./schemas/reel');
+
+// Reel model
+const { reelModel } = reelSchema;
+
+// Reel document creator
+const { reelDocumentCreator } = reelSchema;
+
+// ---------------------------------------------------------
 
 const app = express();
 
@@ -141,7 +151,7 @@ app.get('/api/reel/:id', (request, response) => {
   // 2 -> Reel was not found in database (inteded behaviour)
   // 0 -> server error
 
-  Reel.findById(id)
+  reelModel.findById(id)
     .then((reel) => {
       if (reel) {
         response.json(responseObj(id, 1, 'Reel was found', reel));
@@ -165,7 +175,7 @@ app.get('/api/reels', handleIdsValidation, async (request, response) => {
   // 0 -> server error
 
   const acknowledgments = idArray.map((id) => new Promise((resolve, reject) => {
-    Reel.findById(id).then((reel) => {
+    reelModel.findById(id).then((reel) => {
       if (reel) {
         resolve(responseObj(id, 1, 'Reel was found', reel));
       } else {
@@ -182,17 +192,7 @@ app.get('/api/reels', handleIdsValidation, async (request, response) => {
 app.post('/api/reel', (request, response) => {
   const { body } = request;
 
-  const reel = new Reel({
-    gsm: body.gsm,
-    size: body.size,
-    shipment: body.shipment,
-    shade: body.shade,
-    annotations: body.annotations,
-    bf: body.bf,
-    sold: body.sold,
-    soldTo: body.soldTo,
-    soldDate: body.soldDate,
-  });
+  const reel = reelDocumentCreator(body);
 
   reel.save()
     .then((newReel) => {
@@ -221,17 +221,7 @@ app.post('/api/reels', async (request, response, next) => {
 
   const acknowledgments = reels.map((reel) => new Promise((resolve, reject) => {
     try {
-      const reelToSave = new Reel({
-        gsm: reel.gsm,
-        size: reel.size,
-        shipment: reel.shipment,
-        shade: reel.shade,
-        annotations: reel.annotations,
-        bf: reel.bf,
-        sold: reel.sold,
-        soldTo: reel.soldTo,
-        soldDate: reel.soldDate,
-      });
+      const reelToSave = reelDocumentCreator(reel);
 
       reelToSave.save().then((savedReel) => {
         if (reelToSave === savedReel) {
@@ -254,7 +244,7 @@ app.delete('/api/reel/:id', (request, response) => {
   // This conversion here is necessary
   const id = new mongoose.Types.ObjectId(request.params.id);
 
-  Reel.deleteOne(id).then((res) => {
+  reelModel.deleteOne(id).then((res) => {
     if (res.deletedCount === 1) {
       response.json(responseObj(id, 1, 'Reel was deleted from database', null));
     } else if (res.deletedCount === 0) {
@@ -279,7 +269,7 @@ app.delete('/api/reels', handleIdsValidation, async (request, response, next) =>
       // This conversion here is necessary
       const objId = new mongoose.Types.ObjectId(id);
 
-      Reel.deleteOne(objId).then((res) => {
+      reelModel.deleteOne(objId).then((res) => {
         if (res.deletedCount === 1) {
           resolve(responseObj(id, 1, 'Reel was deleted', null));
         } else {
@@ -312,7 +302,7 @@ app.put('/api/reel/:id', (request, response) => {
     soldDate: body.soldDate,
   };
 
-  Reel.findByIdAndUpdate(id, updationToReel, { new: true }).then((newReel) => {
+  reelModel.findByIdAndUpdate(id, updationToReel, { new: true }).then((newReel) => {
     response.json(responseObj(newReel.id, 1, 'Document was found and updated', newReel));
   }).catch((e) => {
     response.status(400).send(responseObj(id, 0, e.message, null));

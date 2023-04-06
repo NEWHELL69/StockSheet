@@ -25,19 +25,6 @@ reelSchema.set('toJSON', {
 
 const reelModel = mongoose.model('Reel', reelSchema);
 
-const reelDocumentCreator = (ReelPOJO) => new reelModel({
-  gsm: ReelPOJO.gsm,
-  size: ReelPOJO.size,
-  shipment: ReelPOJO.shipment,
-  shade: ReelPOJO.shade,
-  annotations: ReelPOJO.annotations,
-  bf: ReelPOJO.bf,
-  sold: ReelPOJO.sold,
-  soldTo: ReelPOJO.soldTo,
-  soldDate: ReelPOJO.soldDate,
-});
-
 // The first argument to the function below dictates the collection to put new documents in.
 // This is fragile
-exports.reelModel = reelModel;
-exports.reelDocumentCreator = reelDocumentCreator;
+module.exports = reelModel;

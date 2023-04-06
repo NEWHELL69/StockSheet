@@ -13,16 +13,8 @@ const morgan = require('morgan');
 const mongoose = require('mongoose');
 
 // ---------------------------------------------------------
-// mongoose
-// Reel schema
-const reelSchema = require('./schemas/reel');
-
-// Reel model
-const { reelModel } = reelSchema;
-
-// Reel document creator
-const { reelDocumentCreator } = reelSchema;
-
+// mongoose models
+const reelModel = require('./schemas/reel');
 // ---------------------------------------------------------
 
 const app = express();
@@ -142,6 +134,20 @@ const responseObj = (id, code, message, reel) => {
   };
 };
 
+const reelObj = (body) => {
+  return {
+    gsm: body.gsm,
+    size: body.size,
+    shipment: body.shipment,
+    shade: body.shade,
+    annotations: body.annotations,
+    bf: body.bf,
+    sold: body.sold,
+    soldTo: body.soldTo,
+    soldDate: body.soldDate,
+  }
+}
+
 app.get('/api/reel/:id', (request, response) => {
   console.log('Hello');
   const { id } = request.params;
@@ -192,7 +198,7 @@ app.get('/api/reels', handleIdsValidation, async (request, response) => {
 app.post('/api/reel', (request, response) => {
   const { body } = request;
 
-  const reel = reelDocumentCreator(body);
+  const reel = new reelModel(reelObj(body));
 
   reel.save()
     .then((newReel) => {
@@ -221,7 +227,7 @@ app.post('/api/reels', async (request, response, next) => {
 
   const acknowledgments = reels.map((reel) => new Promise((resolve, reject) => {
     try {
-      const reelToSave = reelDocumentCreator(reel);
+      const reelToSave = new reelModel(reelObj(reel));
 
       reelToSave.save().then((savedReel) => {
         if (reelToSave === savedReel) {
@@ -290,17 +296,7 @@ app.put('/api/reel/:id', (request, response) => {
   const { body } = request;
   const { id } = request.params;
 
-  const updationToReel = {
-    gsm: body.gsm,
-    size: body.size,
-    shipment: body.shipment,
-    shade: body.shade,
-    annotations: body.annotations,
-    bf: body.bf,
-    sold: body.sold,
-    soldTo: body.soldTo,
-    soldDate: body.soldDate,
-  };
+  const updationToReel = reelObj(body);
 
   reelModel.findByIdAndUpdate(id, updationToReel, { new: true }).then((newReel) => {
     response.json(responseObj(newReel.id, 1, 'Document was found and updated', newReel));

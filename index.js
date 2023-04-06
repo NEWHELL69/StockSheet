@@ -2,6 +2,10 @@
 // If you modify the code while the application is running then the changes
 // will not be reflected
 
+// There is one big problem in this code. 
+// The code uses HTTP status code and also status codes created by me.
+// This is not consistent. I don't know which to use. Building the frontend will answer this issue.
+
 require('dotenv').config();
 
 const express = require('express');
@@ -63,6 +67,20 @@ const handleDataBaseConnection = (request, response, next) => {
 };
 
 app.use(handleDataBaseConnection);
+
+// Ids validation middleware
+const handleIdsValidation = (request, response, next) => {
+  const invalidPattern = !request.query.ids.match(/^([0-9a-fA-F]+,)*[0-9a-fA-F]+$/);
+  const invalidLength = request.query.ids.length === 0;
+
+  if (invalidPattern || invalidLength) {
+    response.status(400).json({
+      error: 'Invalid ids',
+    });
+  } else {
+    next();
+  }
+};
 // ------------------------------------------------------------
 
 // ------------------------------------------------------------
@@ -115,6 +133,7 @@ const responseObj = (id, code, message, reel) => {
 };
 
 app.get('/api/reel/:id', (request, response) => {
+  console.log('Hello');
   const { id } = request.params;
 
   // In context of get request, the state codes have following meaning:
@@ -136,7 +155,7 @@ app.get('/api/reel/:id', (request, response) => {
     });
 });
 
-app.get('/api/reels', async (request, response, next) => {
+app.get('/api/reels', handleIdsValidation, async (request, response) => {
   const { ids } = request.query;
   const idArray = ids.split(',');
 
@@ -145,23 +164,19 @@ app.get('/api/reels', async (request, response, next) => {
   // 2 -> Reel was not found in database (inteded behaviour)
   // 0 -> server error
 
-  try {
-    const acknowledgments = idArray.map((id) => new Promise((resolve, reject) => {
-      Reel.findById(id).then((reel) => {
-        if (reel) {
-          resolve(responseObj(id, 1, 'Reel was found', reel));
-        } else {
-          resolve(responseObj(id, 2, 'Reel was not found', null));
-        }
-      }).catch((error) => {
-        resolve(responseObj(id, 0, error.message, null));
-      });
-    }));
+  const acknowledgments = idArray.map((id) => new Promise((resolve, reject) => {
+    Reel.findById(id).then((reel) => {
+      if (reel) {
+        resolve(responseObj(id, 1, 'Reel was found', reel));
+      } else {
+        resolve(responseObj(id, 2, 'Reel was not found', null));
+      }
+    }).catch((error) => {
+      resolve(responseObj(id, 0, error.message, null));
+    });
+  }));
 
-    response.json(await Promise.all(acknowledgments));
-  } catch (error) {
-    next(error);
-  }
+  response.json(await Promise.all(acknowledgments));
 });
 
 app.post('/api/reel', (request, response) => {
@@ -204,39 +219,35 @@ app.post('/api/reels', async (request, response, next) => {
   // 2 -> Reel was not saved (inteded behaviour)
   // 0 -> server error
 
-  try {
-    const acknowledgments = reels.map((reel) => new Promise((resolve, reject) => {
-      try {
-        const reelToSave = new Reel({
-          gsm: reel.gsm,
-          size: reel.size,
-          shipment: reel.shipment,
-          shade: reel.shade,
-          annotations: reel.annotations,
-          bf: reel.bf,
-          sold: reel.sold,
-          soldTo: reel.soldTo,
-          soldDate: reel.soldDate,
-        });
+  const acknowledgments = reels.map((reel) => new Promise((resolve, reject) => {
+    try {
+      const reelToSave = new Reel({
+        gsm: reel.gsm,
+        size: reel.size,
+        shipment: reel.shipment,
+        shade: reel.shade,
+        annotations: reel.annotations,
+        bf: reel.bf,
+        sold: reel.sold,
+        soldTo: reel.soldTo,
+        soldDate: reel.soldDate,
+      });
 
-        reelToSave.save().then((savedReel) => {
-          if (reelToSave === savedReel) {
-            resolve(responseObj(savedReel.id, 1, 'Reel was saved', savedReel));
-          } else {
-            resolve(responseObj(null, 2, 'Reel was not saved in database', null));
-          }
-        }).catch((error) => {
-          resolve(responseObj(null, 0, error.message, null));
-        });
-      } catch (error) {
+      reelToSave.save().then((savedReel) => {
+        if (reelToSave === savedReel) {
+          resolve(responseObj(savedReel.id, 1, 'Reel was saved', savedReel));
+        } else {
+          resolve(responseObj(null, 2, 'Reel was not saved in database', null));
+        }
+      }).catch((error) => {
         resolve(responseObj(null, 0, error.message, null));
-      }
-    }));
+      });
+    } catch (error) {
+      resolve(responseObj(null, 0, error.message, null));
+    }
+  }));
 
-    response.json(await Promise.all(acknowledgments));
-  } catch (error) {
-    next(error);
-  }
+  response.json(await Promise.all(acknowledgments));
 });
 
 app.delete('/api/reel/:id', (request, response) => {
@@ -254,7 +265,7 @@ app.delete('/api/reel/:id', (request, response) => {
   });
 });
 
-app.delete('/api/reels', async (request, response, next) => {
+app.delete('/api/reels', handleIdsValidation, async (request, response, next) => {
   const { ids } = request.query;
   const idArray = ids.split(',');
 
@@ -263,29 +274,26 @@ app.delete('/api/reels', async (request, response, next) => {
   // 2 -> Reel was not found in database (inteded behaviour)
   // 0 -> server error
 
-  try {
-    const acknowledgments = idArray.map((id) => new Promise((resolve, reject) => {
-      try {
-        // This conversion here is necessary
-        const objId = new mongoose.Types.ObjectId(id);
+  const acknowledgments = idArray.map((id) => new Promise((resolve, reject) => {
+    try {
+      // This conversion here is necessary
+      const objId = new mongoose.Types.ObjectId(id);
 
-        Reel.deleteOne(objId).then((res) => {
-          if (res.deletedCount === 1) {
-            resolve(responseObj(id, 1, 'Reel was deleted', null));
-          } else {
-            resolve(responseObj(id, 2, 'Reel was not found and hence not deleted', null));
-          }
-        }).catch((error) => {
-          resolve(responseObj(id, 0, error.message, null));
-        });
-      } catch (error) {
+      Reel.deleteOne(objId).then((res) => {
+        if (res.deletedCount === 1) {
+          resolve(responseObj(id, 1, 'Reel was deleted', null));
+        } else {
+          resolve(responseObj(id, 2, 'Reel was not found and hence not deleted', null));
+        }
+      }).catch((error) => {
         resolve(responseObj(id, 0, error.message, null));
-      }
-    }));
-    response.json(await Promise.all(acknowledgments));
-  } catch (error) {
-    next(error);
-  }
+      });
+    } catch (error) {
+      resolve(responseObj(id, 0, error.message, null));
+    }
+  }));
+
+  response.json(await Promise.all(acknowledgments));
 });
 
 app.put('/api/reel/:id', (request, response) => {

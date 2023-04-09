@@ -140,19 +140,17 @@ const reelResponseObj = (id, code, message, reel) => {
   };
 };
 
-const reelObj = (body) => {
-  return {
-    gsm: body.gsm,
-    size: body.size,
-    shipment: body.shipment,
-    shade: body.shade,
-    annotations: body.annotations,
-    bf: body.bf,
-    sold: body.sold,
-    soldTo: body.soldTo,
-    soldDate: body.soldDate,
-  }
-}
+const reelObj = (body) => ({
+  gsm: body.gsm,
+  size: body.size,
+  shipment: body.shipment,
+  shade: body.shade,
+  annotations: body.annotations,
+  bf: body.bf,
+  sold: body.sold,
+  soldTo: body.soldTo,
+  soldDate: body.soldDate,
+});
 
 app.get('/api/reel/:id', (request, response) => {
   console.log('Hello');
@@ -177,7 +175,7 @@ app.get('/api/reel/:id', (request, response) => {
     });
 });
 
-app.get('/api/reels', handleIdsValidation, async (request, response) => {
+app.get('/api/reels', handleIdsValidation, (request, response) => {
   const { ids } = request.query;
   const idArray = ids.split(',');
 
@@ -188,17 +186,17 @@ app.get('/api/reels', handleIdsValidation, async (request, response) => {
 
   const acknowledgments = idArray.map((id) => new Promise((resolve, reject) => {
     reelModel.findById(id).then((reel) => {
-      if (reel) {
-        resolve(reelResponseObj(id, 1, 'Reel was found', reel));
-      } else {
-        resolve(reelResponseObj(id, 2, 'Reel was not found', null));
-      }
+      reel
+        ? resolve(reelResponseObj(id, 1, 'Reel was found', reel))
+        : resolve(reelResponseObj(id, 2, 'Reel was not found', null));
     }).catch((error) => {
       resolve(reelResponseObj(id, 0, error.message, null));
     });
   }));
 
-  response.json(await Promise.all(acknowledgments));
+  Promise.all(acknowledgments).then((res) => {
+    response.json(res);
+  });
 });
 
 app.post('/api/reel', (request, response) => {
@@ -234,13 +232,11 @@ app.post('/api/reels', async (request, response, next) => {
   const acknowledgments = reels.map(async (reel) => {
     try {
       const reelToSave = new reelModel(reelObj(reel));
-      const savedReel = await reelToSave.save()
+      const savedReel = await reelToSave.save();
 
-      if (reelToSave === savedReel) {
-        return reelResponseObj(savedReel.id, 1, 'Reel was saved', savedReel);
-      }
-      return reelResponseObj(null, 2, 'Reel was not saved in database', null);
-
+      return reelToSave === savedReel
+        ? reelResponseObj(savedReel.id, 1, 'Reel was saved', savedReel)
+        : reelResponseObj(null, 2, 'Reel was not saved in database', null);
     } catch (error) {
       return reelResponseObj(null, 0, error.message, null);
     }
@@ -264,7 +260,7 @@ app.delete('/api/reel/:id', (request, response) => {
   });
 });
 
-app.delete('/api/reels', handleIdsValidation, async (request, response, next) => {
+app.delete('/api/reels', handleIdsValidation, (request, response) => {
   const { ids } = request.query;
   const idArray = ids.split(',');
 
@@ -278,19 +274,19 @@ app.delete('/api/reels', handleIdsValidation, async (request, response, next) =>
       // This conversion here is necessary
       const objId = new mongoose.Types.ObjectId(id);
 
-      const deleted = await reelModel.deleteOne(objId)
+      const deleted = await reelModel.deleteOne(objId);
 
-      if (deleted.deletedCount === 1) {
-        return reelResponseObj(id, 1, 'Reel was deleted', null);
-      } 
-      return reelResponseObj(id, 2, 'Reel was not found and hence not deleted', null);
-      
+      return deleted.deletedCount === 1
+        ? reelResponseObj(id, 1, 'Reel was deleted', null)
+        : reelResponseObj(id, 2, 'Reel was not found and hence not deleted', null);
     } catch (error) {
       return reelResponseObj(id, 0, error.message, null);
     }
   });
 
-  response.json(await Promise.all(acknowledgments));
+  Promise.all(acknowledgments).then((res) => {
+    response.json(res);
+  });
 });
 
 app.put('/api/reel/:id', (request, response) => {
@@ -310,8 +306,6 @@ app.put('/api/reel/:id', (request, response) => {
 
 // ------------------------------------------------------------
 // FILTER API
-
-
 
 // FILTER API
 // ------------------------------------------------------------

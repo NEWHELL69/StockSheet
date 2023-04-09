@@ -23,8 +23,8 @@ reelSchema.set('toJSON', {
   },
 });
 
-const reelModel = mongoose.model('Reel', reelSchema);
-
 // The first argument to the function below dictates the collection to put new documents in.
 // This is fragile
+const reelModel = mongoose.model('Reel', reelSchema);
+
 module.exports = reelModel;

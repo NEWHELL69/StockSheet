@@ -15,6 +15,8 @@ const mongoose = require('mongoose');
 // ---------------------------------------------------------
 // mongoose models
 const reelModel = require('./schemas/reel');
+
+// const shipmentModel = require("./schemas/shipment")
 // ---------------------------------------------------------
 
 const app = express();
@@ -70,6 +72,10 @@ const handleDataBaseConnection = (request, response, next) => {
 
 app.use(handleDataBaseConnection);
 
+/**
+ * This is a middleware function in JavaScript that validates the format and length of a query
+ * parameter called "ids" and returns an error response if it is invalid.
+ */
 // Ids validation middleware
 const handleIdsValidation = (request, response, next) => {
   const invalidPattern = !request.query.ids.match(/^([0-9a-fA-F]+,)*[0-9a-fA-F]+$/);
@@ -103,9 +109,9 @@ mongoose.connect(url).then(() => {
 // ------------------------------------------------------------
 // API
 
+// ------------------------------------------------------------
 // Reel API
-
-const responseObj = (id, code, message, reel) => {
+const reelResponseObj = (id, code, message, reel) => {
   // console.log(message);
 
   if (reel) {
@@ -160,14 +166,14 @@ app.get('/api/reel/:id', (request, response) => {
   reelModel.findById(id)
     .then((reel) => {
       if (reel) {
-        response.json(responseObj(id, 1, 'Reel was found', reel));
+        response.json(reelResponseObj(id, 1, 'Reel was found', reel));
       } else {
-        response.status(404).send(responseObj(id, 2, 'Reel was not found', null));
+        response.status(404).send(reelResponseObj(id, 2, 'Reel was not found', null));
       }
     }).catch((e) => {
       console.log(e);
 
-      response.status(400).send(responseObj(id, 0, e.message, null));
+      response.status(400).send(reelResponseObj(id, 0, e.message, null));
     });
 });
 
@@ -183,12 +189,12 @@ app.get('/api/reels', handleIdsValidation, async (request, response) => {
   const acknowledgments = idArray.map((id) => new Promise((resolve, reject) => {
     reelModel.findById(id).then((reel) => {
       if (reel) {
-        resolve(responseObj(id, 1, 'Reel was found', reel));
+        resolve(reelResponseObj(id, 1, 'Reel was found', reel));
       } else {
-        resolve(responseObj(id, 2, 'Reel was not found', null));
+        resolve(reelResponseObj(id, 2, 'Reel was not found', null));
       }
     }).catch((error) => {
-      resolve(responseObj(id, 0, error.message, null));
+      resolve(reelResponseObj(id, 0, error.message, null));
     });
   }));
 
@@ -206,14 +212,14 @@ app.post('/api/reel', (request, response) => {
       // save method only resolves with the saved document,
       // when the document is actually saved in database
       if (newReel === reel) {
-        response.json(responseObj(newReel.id, 1, 'Reel is saved in database', newReel));
+        response.json(reelResponseObj(newReel.id, 1, 'Reel is saved in database', newReel));
       } else {
-        response.json(responseObj(null, 2, 'Reel was not saved in database', null));
+        response.json(reelResponseObj(null, 2, 'Reel was not saved in database', null));
       }
     }).catch((error) => {
       console.log(error);
 
-      response.status(400).json(responseObj(null, 0, error.message, null));
+      response.status(400).json(reelResponseObj(null, 0, error.message, null));
     });
 });
 
@@ -225,23 +231,20 @@ app.post('/api/reels', async (request, response, next) => {
   // 2 -> Reel was not saved (inteded behaviour)
   // 0 -> server error
 
-  const acknowledgments = reels.map((reel) => new Promise((resolve, reject) => {
+  const acknowledgments = reels.map(async (reel) => {
     try {
       const reelToSave = new reelModel(reelObj(reel));
+      const savedReel = await reelToSave.save()
 
-      reelToSave.save().then((savedReel) => {
-        if (reelToSave === savedReel) {
-          resolve(responseObj(savedReel.id, 1, 'Reel was saved', savedReel));
-        } else {
-          resolve(responseObj(null, 2, 'Reel was not saved in database', null));
-        }
-      }).catch((error) => {
-        resolve(responseObj(null, 0, error.message, null));
-      });
+      if (reelToSave === savedReel) {
+        return reelResponseObj(savedReel.id, 1, 'Reel was saved', savedReel);
+      }
+      return reelResponseObj(null, 2, 'Reel was not saved in database', null);
+
     } catch (error) {
-      resolve(responseObj(null, 0, error.message, null));
+      return reelResponseObj(null, 0, error.message, null);
     }
-  }));
+  });
 
   response.json(await Promise.all(acknowledgments));
 });
@@ -252,12 +255,12 @@ app.delete('/api/reel/:id', (request, response) => {
 
   reelModel.deleteOne(id).then((res) => {
     if (res.deletedCount === 1) {
-      response.json(responseObj(id, 1, 'Reel was deleted from database', null));
+      response.json(reelResponseObj(id, 1, 'Reel was deleted from database', null));
     } else if (res.deletedCount === 0) {
-      response.json(responseObj(id, 2, 'Reel was not found and hence not deleted', null));
+      response.json(reelResponseObj(id, 2, 'Reel was not found and hence not deleted', null));
     }
   }).catch((e) => {
-    response.json(responseObj(id, 0, e.message, null));
+    response.json(reelResponseObj(id, 0, e.message, null));
   });
 });
 
@@ -270,24 +273,22 @@ app.delete('/api/reels', handleIdsValidation, async (request, response, next) =>
   // 2 -> Reel was not found in database (inteded behaviour)
   // 0 -> server error
 
-  const acknowledgments = idArray.map((id) => new Promise((resolve, reject) => {
+  const acknowledgments = idArray.map(async (id) => {
     try {
       // This conversion here is necessary
       const objId = new mongoose.Types.ObjectId(id);
 
-      reelModel.deleteOne(objId).then((res) => {
-        if (res.deletedCount === 1) {
-          resolve(responseObj(id, 1, 'Reel was deleted', null));
-        } else {
-          resolve(responseObj(id, 2, 'Reel was not found and hence not deleted', null));
-        }
-      }).catch((error) => {
-        resolve(responseObj(id, 0, error.message, null));
-      });
+      const deleted = await reelModel.deleteOne(objId)
+
+      if (deleted.deletedCount === 1) {
+        return reelResponseObj(id, 1, 'Reel was deleted', null);
+      } 
+      return reelResponseObj(id, 2, 'Reel was not found and hence not deleted', null);
+      
     } catch (error) {
-      resolve(responseObj(id, 0, error.message, null));
+      return reelResponseObj(id, 0, error.message, null);
     }
-  }));
+  });
 
   response.json(await Promise.all(acknowledgments));
 });
@@ -299,16 +300,27 @@ app.put('/api/reel/:id', (request, response) => {
   const updationToReel = reelObj(body);
 
   reelModel.findByIdAndUpdate(id, updationToReel, { new: true }).then((newReel) => {
-    response.json(responseObj(newReel.id, 1, 'Document was found and updated', newReel));
+    response.json(reelResponseObj(newReel.id, 1, 'Document was found and updated', newReel));
   }).catch((e) => {
-    response.status(400).send(responseObj(id, 0, e.message, null));
+    response.status(400).send(reelResponseObj(id, 0, e.message, null));
   });
 });
-
+// REEL API
 // ------------------------------------------------------------
 
 // ------------------------------------------------------------
-// Error handling for reel api
+// FILTER API
+
+
+
+// FILTER API
+// ------------------------------------------------------------
+
+// API
+// ------------------------------------------------------------
+
+// ------------------------------------------------------------
+// Error handling
 
 const errorHandler = (error, request, response, next) => {
   console.error(error.message);
@@ -323,6 +335,7 @@ const errorHandler = (error, request, response, next) => {
 // this has to be the last loaded middleware.
 app.use(errorHandler);
 
+// Error handling
 // ------------------------------------------------------------
 
 const port = process.env.PORT || 3001;

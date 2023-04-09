@@ -134,7 +134,7 @@ DELETE http://localhost:3001/api/reel/eeda898561ddadde23b HTTP/1.1
 
 ###
 #This should work
-DELETE http://localhost:3001/api/reels?ids=642c942a6e2607618eb15f2d,642c942a6e2607618eb15f2c HTTP/1.1
+DELETE http://localhost:3001/api/reels?ids=642e86a04a1c858132f3332c,642e86a04a1c858132f33329 HTTP/1.1
 
 ###
 #This should not work

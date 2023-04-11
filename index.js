@@ -17,8 +17,8 @@ const mongoose = require('mongoose');
 
 const reelModel = require('./schemas/reel');
 const FilterModel = require('./schemas/filter');
-const shipmentModel = require('./schemas/shipment')
-const sheetModel = require("./schemas/sheet")
+const shipmentModel = require('./schemas/shipment');
+const sheetModel = require('./schemas/sheet');
 // const shipmentModel = require("./schemas/shipment")
 
 // ---------------------------------------------------------
@@ -122,20 +122,20 @@ const requests = require('./requests/requests');
 
 // ------------------------------------------------------------
 // REEL API
-     
-requests.getSingle(app, "reel", reelModel)
 
-requests.getMultiple(app, "reel", reelModel, handleIdsValidation)
+requests.getSingle(app, 'reel', reelModel);
 
-requests.postSingle(app, "reel", reelModel)
+requests.getMultiple(app, 'reel', reelModel, handleIdsValidation);
 
-requests.postMultiple(app, "reel", reelModel)
+requests.postSingle(app, 'reel', reelModel);
 
-requests.deleteSingle(app, "reel", reelModel)
+requests.postMultiple(app, 'reel', reelModel);
 
-requests.deleteMultiple(app, "reel", reelModel, handleIdsValidation)
+requests.deleteSingle(app, 'reel', reelModel);
 
-requests.putSingle(app, "reel", reelModel)
+requests.deleteMultiple(app, 'reel', reelModel, handleIdsValidation);
+
+requests.putSingle(app, 'reel', reelModel);
 
 // REEL API
 // ------------------------------------------------------------
@@ -143,59 +143,59 @@ requests.putSingle(app, "reel", reelModel)
 // ------------------------------------------------------------
 // FILTER API
 
-requests.getSingle(app, "filter", FilterModel)
+requests.getSingle(app, 'filter', FilterModel);
 
-requests.getMultiple(app, 'filter', FilterModel, handleIdsValidation)
+requests.getMultiple(app, 'filter', FilterModel, handleIdsValidation);
 
 requests.postSingle(app, 'filter', FilterModel);
 
-requests.postMultiple(app, "filter", FilterModel)
+requests.postMultiple(app, 'filter', FilterModel);
 
-requests.deleteSingle(app, 'filter', FilterModel)
+requests.deleteSingle(app, 'filter', FilterModel);
 
-requests.deleteMultiple(app, "filter", FilterModel, handleIdsValidation)
+requests.deleteMultiple(app, 'filter', FilterModel, handleIdsValidation);
 
-requests.putSingle(app, "filter", FilterModel)
+requests.putSingle(app, 'filter', FilterModel);
 
 // FILTER API
 // ------------------------------------------------------------
 
 // ------------------------------------------------------------
 // SHIPMENT API
-     
-requests.getSingle(app, "shipment", shipmentModel)
 
-requests.getMultiple(app, "shipment", shipmentModel, handleIdsValidation)
+requests.getSingle(app, 'shipment', shipmentModel);
 
-requests.postSingle(app, "shipment", shipmentModel)
+requests.getMultiple(app, 'shipment', shipmentModel, handleIdsValidation);
 
-requests.postMultiple(app, "shipment", shipmentModel)
+requests.postSingle(app, 'shipment', shipmentModel);
 
-requests.deleteSingle(app, "shipment", shipmentModel)
+requests.postMultiple(app, 'shipment', shipmentModel);
 
-requests.deleteMultiple(app, "shipment", shipmentModel, handleIdsValidation)
+requests.deleteSingle(app, 'shipment', shipmentModel);
 
-requests.putSingle(app, "shipment", shipmentModel)
+requests.deleteMultiple(app, 'shipment', shipmentModel, handleIdsValidation);
+
+requests.putSingle(app, 'shipment', shipmentModel);
 
 // SHIPMENT API
 // ------------------------------------------------------------
 
 // ------------------------------------------------------------
 // SHEET API
-     
-requests.getSingle(app, "sheet", sheetModel)
 
-requests.getMultiple(app, "sheet", sheetModel, handleIdsValidation)
+requests.getSingle(app, 'sheet', sheetModel);
 
-requests.postSingle(app, "sheet", sheetModel)
+requests.getMultiple(app, 'sheet', sheetModel, handleIdsValidation);
 
-requests.postMultiple(app, "sheet", sheetModel)
+requests.postSingle(app, 'sheet', sheetModel);
 
-requests.deleteSingle(app, "sheet", sheetModel)
+requests.postMultiple(app, 'sheet', sheetModel);
 
-requests.deleteMultiple(app, "sheet", sheetModel, handleIdsValidation)
+requests.deleteSingle(app, 'sheet', sheetModel);
 
-requests.putSingle(app, "sheet", sheetModel)
+requests.deleteMultiple(app, 'sheet', sheetModel, handleIdsValidation);
+
+requests.putSingle(app, 'sheet', sheetModel);
 
 // REEL API
 // ------------------------------------------------------------

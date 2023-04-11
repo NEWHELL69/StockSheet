@@ -55,12 +55,12 @@ exports.postSingle = (app, modelName, Model) => {
 exports.getSingle = (app, modelName, Model) => {
   app.get(`/api/${modelName}/:id`, (request, response) => {
     const { id } = request.params;
-  
+
     // In context of get request and model reel, the state codes have following meaning:
     // 1 -> Reel was found (intended behaviour)
     // 2 -> Reel was not found in database (inteded behaviour)
     // 0 -> server error
-  
+
     Model.findById(id)
       .then((document) => {
         if (document) {
@@ -70,7 +70,7 @@ exports.getSingle = (app, modelName, Model) => {
         }
       }).catch((e) => {
         console.log(e);
-  
+
         response.status(400).send(documentResponseObj(id, 0, e.message, null));
       });
   });
@@ -80,12 +80,12 @@ exports.getMultiple = (app, modelName, Model, ...middlewares) => {
   app.get(`/api/${modelName}s`, middlewares, (request, response) => {
     const { ids } = request.query;
     const idArray = ids.split(',');
-  
+
     // In context of get request and reel model, the state codes have following meaning:
     // 1 -> Reel was found (intended behaviour)
     // 2 -> Reel was not found in database (inteded behaviour)
     // 0 -> server error
-  
+
     const acknowledgments = idArray.map((id) => new Promise((resolve, reject) => {
       Model.findById(id).then((document) => {
         document
@@ -95,19 +95,18 @@ exports.getMultiple = (app, modelName, Model, ...middlewares) => {
         resolve(documentResponseObj(id, 0, error.message, null));
       });
     }));
-  
+
     Promise.all(acknowledgments).then((res) => {
       response.json(res);
     });
   });
 };
 
-
 exports.deleteSingle = (app, modelName, Model) => {
   app.delete(`/api/${modelName}/:id`, (request, response) => {
     // This conversion here is necessary
     const id = new mongoose.Types.ObjectId(request.params.id);
-  
+
     Model.deleteOne(id).then((res) => {
       if (res.deletedCount === 1) {
         response.json(documentResponseObj(id, 1, `${modelName} was deleted from database`, null));
@@ -124,19 +123,19 @@ exports.deleteMultiple = (app, modelName, Model, ...middlewares) => {
   app.delete(`/api/${modelName}s`, middlewares, (request, response) => {
     const { ids } = request.query;
     const idArray = ids.split(',');
-  
+
     // In context of delete request for reel, the state codes have following meaning:
     // 1 -> Reel deletion successfull (intended behaviour)
     // 2 -> Reel was not found in database (inteded behaviour)
     // 0 -> server error
-  
+
     const acknowledgments = idArray.map(async (id) => {
       try {
         // This conversion here is necessary
         const objId = new mongoose.Types.ObjectId(id);
-  
+
         const deleted = await Model.deleteOne(objId);
-  
+
         return deleted.deletedCount === 1
           ? documentResponseObj(id, 1, `${modelName} was deleted`, null)
           : documentResponseObj(id, 2, `${modelName} was not found and hence not deleted`, null);
@@ -144,7 +143,7 @@ exports.deleteMultiple = (app, modelName, Model, ...middlewares) => {
         return documentResponseObj(id, 0, error.message, null);
       }
     });
-  
+
     Promise.all(acknowledgments).then((res) => {
       response.json(res);
     });
@@ -154,17 +153,17 @@ exports.deleteMultiple = (app, modelName, Model, ...middlewares) => {
 exports.postMultiple = (app, modelName, Model) => {
   app.post(`/api/${modelName}s`, async (request, response, next) => {
     const documentsToSave = request.body;
-  
+
     // In context of post request for reel, the state codes have following meaning:
     // 1 -> Reel was saved (intended behaviour)
     // 2 -> Reel was not saved (inteded behaviour)
     // 0 -> server error
-  
+
     const acknowledgments = documentsToSave.map(async (documentToSave) => {
       try {
-        documentToSave = new Model({...documentToSave});
+        documentToSave = new Model({ ...documentToSave });
         const savedDocument = await documentToSave.save();
-  
+
         return documentToSave === savedDocument
           ? documentResponseObj(savedDocument.id, 1, `${modelName} was saved`, savedDocument)
           : documentResponseObj(null, 2, `${modelName} was not saved in database`, null);
@@ -181,12 +180,12 @@ exports.putSingle = (app, modelName, Model) => {
     const { body } = request;
     const { id } = request.params;
 
-    const updationToDocument = {...body};
+    const updationToDocument = { ...body };
 
     Model.findByIdAndUpdate(id, updationToDocument, { new: true }).then((updatedDocument) => {
-      if(updatedDocument) {
+      if (updatedDocument) {
         response.json(documentResponseObj(updatedDocument.id, 1, `${modelName} was found and updated`, updatedDocument));
-      } 
+      }
       response.json(documentResponseObj(null, 2, `${modelName} was not found and hence not updated`, null));
     }).catch((e) => {
       response.status(400).send(documentResponseObj(id, 0, e.message, null));

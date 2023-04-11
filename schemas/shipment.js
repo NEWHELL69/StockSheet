@@ -6,7 +6,7 @@ const shipmentSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now },
   filters: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Filter' }],
   truckNumber: String,
-  billTo: String
+  billTo: String,
 });
 
 shipmentSchema.set('toJSON', {

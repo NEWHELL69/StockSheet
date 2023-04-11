@@ -2,23 +2,23 @@
 const mongoose = require('mongoose');
 
 const filterOptionsSchema = new mongoose.Schema({
-    gsm: Number,
-    size: Number,
-    shade: String,
-    bf: Number,
-})
+  gsm: Number,
+  size: Number,
+  shade: String,
+  bf: Number,
+});
 
 // Reel id is created by mongoose when we save a document
 const filterSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now },
-  reels: [{ type: Schema.Types.ObjectId, ref: 'Reel' }],
-  filterOptions: {type: filterOptionsSchema, default: {}}
+  reels: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Reel' }],
+  filterOptions: { type: filterOptionsSchema, default: {} },
 });
 
 filterSchema.set('toJSON', {
   transform: (document, returnedObject) => {
     returnedObject.id = returnedObject._id.toString();
-    delete returnedObject._id; 
+    delete returnedObject._id;
     delete returnedObject.__v;
   },
 });

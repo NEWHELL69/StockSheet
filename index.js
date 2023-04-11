@@ -14,9 +14,11 @@ const mongoose = require('mongoose');
 
 // ---------------------------------------------------------
 // mongoose models
-const reelModel = require('./schemas/reel');
 
+const reelModel = require('./schemas/reel');
+const FilterModel = require('./schemas/filter');
 // const shipmentModel = require("./schemas/shipment")
+
 // ---------------------------------------------------------
 
 const app = express();
@@ -107,205 +109,51 @@ mongoose.connect(url).then(() => {
 // ------------------------------------------------------------
 
 // ------------------------------------------------------------
+// Requests
+
+const requests = require('./requests/requests');
+
+// ------------------------------------------------------------
+
+// ------------------------------------------------------------
 // API
 
 // ------------------------------------------------------------
-// Reel API
-const reelResponseObj = (id, code, message, reel) => {
-  // console.log(message);
+// REEL API
+     
+requests.getSingle(app, "reel", reelModel)
 
-  if (reel) {
-    // JSON.stringify calls the toJSON method defined on the document and does some other imp stuff.
-    reel = JSON.stringify(reel);
-    reel = JSON.parse(reel);
+requests.getMultiple(app, "reel", reelModel, handleIdsValidation)
 
-    return {
-      id,
-      state: {
-        code,
-        message,
-      },
-      reel: {
-        ...reel,
-      },
-    };
-  }
-  return {
-    id,
-    state: {
-      code,
-      message,
-    },
-    reel: null,
-  };
-};
+requests.postSingle(app, "reel", reelModel)
 
-const reelObj = (body) => ({
-  gsm: body.gsm,
-  size: body.size,
-  shipment: body.shipment,
-  shade: body.shade,
-  annotations: body.annotations,
-  bf: body.bf,
-  sold: body.sold,
-  soldTo: body.soldTo,
-  soldDate: body.soldDate,
-});
+requests.postMultiple(app, "reel", reelModel)
 
-app.get('/api/reel/:id', (request, response) => {
-  console.log('Hello');
-  const { id } = request.params;
+requests.deleteSingle(app, "reel", reelModel)
 
-  // In context of get request, the state codes have following meaning:
-  // 1 -> Reel was found (intended behaviour)
-  // 2 -> Reel was not found in database (inteded behaviour)
-  // 0 -> server error
+requests.deleteMultiple(app, "reel", reelModel, handleIdsValidation)
 
-  reelModel.findById(id)
-    .then((reel) => {
-      if (reel) {
-        response.json(reelResponseObj(id, 1, 'Reel was found', reel));
-      } else {
-        response.status(404).send(reelResponseObj(id, 2, 'Reel was not found', null));
-      }
-    }).catch((e) => {
-      console.log(e);
+requests.putSingle(app, "reel", reelModel)
 
-      response.status(400).send(reelResponseObj(id, 0, e.message, null));
-    });
-});
-
-app.get('/api/reels', handleIdsValidation, (request, response) => {
-  const { ids } = request.query;
-  const idArray = ids.split(',');
-
-  // In context of get request, the state codes have following meaning:
-  // 1 -> Reel was found (intended behaviour)
-  // 2 -> Reel was not found in database (inteded behaviour)
-  // 0 -> server error
-
-  const acknowledgments = idArray.map((id) => new Promise((resolve, reject) => {
-    reelModel.findById(id).then((reel) => {
-      reel
-        ? resolve(reelResponseObj(id, 1, 'Reel was found', reel))
-        : resolve(reelResponseObj(id, 2, 'Reel was not found', null));
-    }).catch((error) => {
-      resolve(reelResponseObj(id, 0, error.message, null));
-    });
-  }));
-
-  Promise.all(acknowledgments).then((res) => {
-    response.json(res);
-  });
-});
-
-app.post('/api/reel', (request, response) => {
-  const { body } = request;
-
-  const reel = new reelModel(reelObj(body));
-
-  reel.save()
-    .then((newReel) => {
-      // Unlike findById method which can resolve with null value,
-      // save method only resolves with the saved document,
-      // when the document is actually saved in database
-      if (newReel === reel) {
-        response.json(reelResponseObj(newReel.id, 1, 'Reel is saved in database', newReel));
-      } else {
-        response.json(reelResponseObj(null, 2, 'Reel was not saved in database', null));
-      }
-    }).catch((error) => {
-      console.log(error);
-
-      response.status(400).json(reelResponseObj(null, 0, error.message, null));
-    });
-});
-
-app.post('/api/reels', async (request, response, next) => {
-  const reels = request.body;
-
-  // In context of post request, the state codes have following meaning:
-  // 1 -> Reel was saved (intended behaviour)
-  // 2 -> Reel was not saved (inteded behaviour)
-  // 0 -> server error
-
-  const acknowledgments = reels.map(async (reel) => {
-    try {
-      const reelToSave = new reelModel(reelObj(reel));
-      const savedReel = await reelToSave.save();
-
-      return reelToSave === savedReel
-        ? reelResponseObj(savedReel.id, 1, 'Reel was saved', savedReel)
-        : reelResponseObj(null, 2, 'Reel was not saved in database', null);
-    } catch (error) {
-      return reelResponseObj(null, 0, error.message, null);
-    }
-  });
-
-  response.json(await Promise.all(acknowledgments));
-});
-
-app.delete('/api/reel/:id', (request, response) => {
-  // This conversion here is necessary
-  const id = new mongoose.Types.ObjectId(request.params.id);
-
-  reelModel.deleteOne(id).then((res) => {
-    if (res.deletedCount === 1) {
-      response.json(reelResponseObj(id, 1, 'Reel was deleted from database', null));
-    } else if (res.deletedCount === 0) {
-      response.json(reelResponseObj(id, 2, 'Reel was not found and hence not deleted', null));
-    }
-  }).catch((e) => {
-    response.json(reelResponseObj(id, 0, e.message, null));
-  });
-});
-
-app.delete('/api/reels', handleIdsValidation, (request, response) => {
-  const { ids } = request.query;
-  const idArray = ids.split(',');
-
-  // In context of delete request for reel, the state codes have following meaning:
-  // 1 -> Reel deletion successfull (intended behaviour)
-  // 2 -> Reel was not found in database (inteded behaviour)
-  // 0 -> server error
-
-  const acknowledgments = idArray.map(async (id) => {
-    try {
-      // This conversion here is necessary
-      const objId = new mongoose.Types.ObjectId(id);
-
-      const deleted = await reelModel.deleteOne(objId);
-
-      return deleted.deletedCount === 1
-        ? reelResponseObj(id, 1, 'Reel was deleted', null)
-        : reelResponseObj(id, 2, 'Reel was not found and hence not deleted', null);
-    } catch (error) {
-      return reelResponseObj(id, 0, error.message, null);
-    }
-  });
-
-  Promise.all(acknowledgments).then((res) => {
-    response.json(res);
-  });
-});
-
-app.put('/api/reel/:id', (request, response) => {
-  const { body } = request;
-  const { id } = request.params;
-
-  const updationToReel = reelObj(body);
-
-  reelModel.findByIdAndUpdate(id, updationToReel, { new: true }).then((newReel) => {
-    response.json(reelResponseObj(newReel.id, 1, 'Document was found and updated', newReel));
-  }).catch((e) => {
-    response.status(400).send(reelResponseObj(id, 0, e.message, null));
-  });
-});
 // REEL API
 // ------------------------------------------------------------
 
 // ------------------------------------------------------------
 // FILTER API
+
+requests.getSingle(app, "filter", FilterModel)
+
+requests.getMultiple(app, 'filter', FilterModel, handleIdsValidation)
+
+requests.postSingle(app, 'filter', FilterModel);
+
+requests.postMultiple(app, "filter", FilterModel)
+
+requests.deleteSingle(app, 'filter', FilterModel)
+
+requests.deleteMultiple(app, "filter", FilterModel, handleIdsValidation)
+
+requests.putSingle(app, "filter", FilterModel)
 
 // FILTER API
 // ------------------------------------------------------------

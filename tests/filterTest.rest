@@ -1,0 +1,141 @@
+# ---------------------------------------
+# POST filter
+
+###
+#This should work
+POST http://localhost:3001/api/filter HTTP/1.1
+content-type: application/json
+
+{
+    "reels": ["64247fc34f652067173bc086", "64299c60756175da89ac54ec", "642c809acc4f71a6f5a1bf14"],
+    "filterOptions": {
+        "gsm": null,
+        "size": null,
+        "shade": null,
+        "bf": 22
+    }
+}
+
+###
+#This should not work
+POST http://localhost:3001/api/filter HTTP/1.1
+content-type: application/json
+
+{
+    "reels": ["64247fc34f652067173bc086k", "64299c60756175da89ac54ecz", "642c809acc4f71a6f5a1bf14"],
+    "filterOptions": {
+        "gsm": null,
+        "size": null,
+        "shade": null,
+        "bf": []
+    }
+}
+
+# ---------------------------------------
+
+# ---------------------------------------
+# POST filters
+
+###
+#This should work
+POST http://localhost:3001/api/filters HTTP/1.1
+content-type: application/json
+
+[
+    {
+        "reels": ["64247fc34f652067173bc086", "64299c60756175da89ac54ec", "642c809acc4f71a6f5a1bf14"],
+        "filterOptions": {
+            "gsm": null,
+            "size": null,
+            "shade": null,
+            "bf": 22
+        }
+    },
+    {
+        "reels": ["64247fc34f652067173bc086", "64299c60756175da89ac54ec", "642c809acc4f71a6f5a1bf14"],
+        "filterOptions": {
+            "gsm": null,
+            "size": null,
+            "shade": null,
+            "bf": 22
+        }
+    }
+]
+
+# ---------------------------------------
+# ---------------------------------------
+# GET filter
+
+###
+#This should work
+GET http://localhost:3001/api/filter/6433dfaaf49512705e28cda4 HTTP/1.1
+
+###
+#This should NOT work
+GET http://localhost:3001/api/filter/6433dfaaf49512705e28cda4 HTTP/1.1
+
+# ---------------------------------------
+# ---------------------------------------
+# GET filters
+
+###
+#This should work
+GET http://localhost:3001/api/filters?ids=6434361082e217e70fb97654,643451edee6deb1e9736ecd8 HTTP/1.1
+
+###
+#This should not work
+GET http://localhost:3001/api/filters?ids=642c91ceb497b0ab40870eae HTTP/1.1
+
+# ---------------------------------------
+# ---------------------------------------
+# DELETE filter
+
+###
+#This should work
+DELETE http://localhost:3001/api/filter/6433dfaaf49512705e28cda4 HTTP/1.1
+
+###
+#This should not work
+DELETE http://localhost:3001/api/filter/eeda898561ddadde23b HTTP/1.1
+
+# ---------------------------------------
+# ---------------------------------------
+# DELETE filters
+
+###
+#This should work
+DELETE http://localhost:3001/api/filters?ids=6434361082e217e70fb97654,643451edee6deb1e9736ecd8 HTTP/1.1
+
+###
+#This should not work
+DELETE http://localhost:3001/api/filters?ids=642c91ceb497b0ab40870eae HTTP/1.1
+
+# ---------------------------------------
+# ---------------------------------------
+# PUT filter
+
+###
+#This should work
+PUT http://localhost:3001/api/filter/6434523cee6deb1e9736ecdc HTTP/1.1
+content-type: application/json
+
+{
+    "filterOptions": {
+        "gsm": "120",
+        "shade": "KRAFT"
+    }
+}
+
+###
+#This should not work
+PUT http://localhost:3001/api/filter/6434523cee6deb1e9736ecdc HTTP/1.1
+content-type: application/json
+
+{
+    "filterOptions": {
+        "gsm": [],
+        "shade": "KRAFT"
+    }
+}
+
+# ---------------------------------------

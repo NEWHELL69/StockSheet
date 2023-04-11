@@ -17,6 +17,8 @@ const mongoose = require('mongoose');
 
 const reelModel = require('./schemas/reel');
 const FilterModel = require('./schemas/filter');
+const shipmentModel = require('./schemas/shipment')
+const sheetModel = require("./schemas/sheet")
 // const shipmentModel = require("./schemas/shipment")
 
 // ---------------------------------------------------------
@@ -156,6 +158,46 @@ requests.deleteMultiple(app, "filter", FilterModel, handleIdsValidation)
 requests.putSingle(app, "filter", FilterModel)
 
 // FILTER API
+// ------------------------------------------------------------
+
+// ------------------------------------------------------------
+// SHIPMENT API
+     
+requests.getSingle(app, "shipment", shipmentModel)
+
+requests.getMultiple(app, "shipment", shipmentModel, handleIdsValidation)
+
+requests.postSingle(app, "shipment", shipmentModel)
+
+requests.postMultiple(app, "shipment", shipmentModel)
+
+requests.deleteSingle(app, "shipment", shipmentModel)
+
+requests.deleteMultiple(app, "shipment", shipmentModel, handleIdsValidation)
+
+requests.putSingle(app, "shipment", shipmentModel)
+
+// SHIPMENT API
+// ------------------------------------------------------------
+
+// ------------------------------------------------------------
+// SHEET API
+     
+requests.getSingle(app, "sheet", sheetModel)
+
+requests.getMultiple(app, "sheet", sheetModel, handleIdsValidation)
+
+requests.postSingle(app, "sheet", sheetModel)
+
+requests.postMultiple(app, "sheet", sheetModel)
+
+requests.deleteSingle(app, "sheet", sheetModel)
+
+requests.deleteMultiple(app, "sheet", sheetModel, handleIdsValidation)
+
+requests.putSingle(app, "sheet", sheetModel)
+
+// REEL API
 // ------------------------------------------------------------
 
 // API

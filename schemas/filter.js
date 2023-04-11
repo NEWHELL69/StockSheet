@@ -6,7 +6,7 @@ const filterOptionsSchema = new mongoose.Schema({
   size: Number,
   shade: String,
   bf: Number,
-});
+}, { _id : false });
 
 // Reel id is created by mongoose when we save a document
 const filterSchema = new mongoose.Schema({

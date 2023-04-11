@@ -11,8 +11,8 @@ content-type: application/json
     "filterOptions": {
         "gsm": null,
         "size": null,
-        "shade": null,
-        "bf": 22
+        "shade": "Kraft",
+        "bf": 18
     }
 }
 
@@ -92,7 +92,7 @@ GET http://localhost:3001/api/filters?ids=642c91ceb497b0ab40870eae HTTP/1.1
 
 ###
 #This should work
-DELETE http://localhost:3001/api/filter/6433dfaaf49512705e28cda4 HTTP/1.1
+DELETE http://localhost:3001/api/filter/6434dac6bc14459388ffb602 HTTP/1.1
 
 ###
 #This should not work

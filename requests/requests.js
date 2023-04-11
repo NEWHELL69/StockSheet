@@ -77,7 +77,6 @@ exports.getSingle = (app, modelName, Model) => {
 };
 
 exports.getMultiple = (app, modelName, Model, ...middlewares) => {
-  console.log(middlewares)
   app.get(`/api/${modelName}s`, middlewares, (request, response) => {
     const { ids } = request.query;
     const idArray = ids.split(',');
@@ -121,8 +120,8 @@ exports.deleteSingle = (app, modelName, Model) => {
   });
 };
 
-exports.deleteMultiple = (app, modelName, Model, handleIdsValidation) => {
-  app.delete(`/api/${modelName}s`, handleIdsValidation, (request, response) => {
+exports.deleteMultiple = (app, modelName, Model, ...middlewares) => {
+  app.delete(`/api/${modelName}s`, middlewares, (request, response) => {
     const { ids } = request.query;
     const idArray = ids.split(',');
   

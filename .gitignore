@@ -1,7 +1,0 @@
-# A file which is already added to the repo is tracked by git, meaning adding file name here will not 
-# immediately reflect the changes. You need to clear git cache. using "git rm --cached file_name.ext"
-# https://stackoverflow.com/questions/45400361/why-is-gitignore-not-ignoring-my-files
-
-node_modules
-frontend
-.env
